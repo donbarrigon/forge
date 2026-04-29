@@ -1,0 +1,29 @@
+[package]
+name = "forge"
+version = "0.1.0"
+edition = "2024"
+
+
+[lib]
+name = "forge"
+path = "src/lib.rs"
+
+[dependencies]
+
+# ================ hyper ================
+hyper = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["full"] }
+
+# ================ error ================
+backtrace = "0.3"
+
+# ================ mongodb ================
+serde = "1.0.188"
+futures = "0.3.28"
+serde_json = "1.0.149"
+# ##tokio = {version = "1.32.0", features = ["full"]}
+[dependencies.mongodb]
+version = "3.6.0"
+
