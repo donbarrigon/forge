@@ -14,6 +14,8 @@ use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tokio_rustls::TlsAcceptor;
 
+use crate::log;
+
 pub struct Server {
     addr: SocketAddr,
     shutdown_sender: Option<oneshot::Sender<()>>,
@@ -25,9 +27,7 @@ impl Server {
     pub fn new(host: &str, port: u16) -> Self {
         let _ = rustls::crypto::ring::default_provider().install_default();
 
-        let addr = format!("{}:{}", host, port)
-            .parse()
-            .expect("dirección inválida");
+        let addr = format!("{}:{}", host, port).parse().expect("dirección inválida");
 
         return Self {
             addr,
@@ -183,8 +183,7 @@ fn get_tls_acceptor() -> Result<TlsAcceptor, Box<dyn std::error::Error>> {
         .next()
         .ok_or("certificado no encontrado")??;
 
-    let key_der = rustls_pemfile::private_key(&mut key_bytes.as_slice())?
-        .ok_or("llave privada no encontrada")?;
+    let key_der = rustls_pemfile::private_key(&mut key_bytes.as_slice())?.ok_or("llave privada no encontrada")?;
 
     let mut config = ServerConfig::builder()
         .with_no_client_auth()
@@ -197,6 +196,7 @@ fn get_tls_acceptor() -> Result<TlsAcceptor, Box<dyn std::error::Error>> {
 
 pub async fn server_start() -> Result<(), Box<dyn std::error::Error>> {
     crate::config::load_env()?;
+    crate::log::init();
 
     let config = crate::config::env();
     let mut handles = vec![];
@@ -231,5 +231,14 @@ pub async fn server_start() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn hello(_req: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
+    log::emergency("esto es una emergencia", None);
+    log::alert("esto es una alerta", None);
+    log::critical("esto es critico", None);
+    log::error("esto es un error", None);
+    log::warning("esto es una advertencia", None);
+    log::notice("esto es una noticia", None);
+    log::info("esto es info", None);
+    log::debug("esto es un debug", None);
+    println!("Hello, from Forge!");
     return Ok(Response::new(Full::new(Bytes::from("Hello, from Forge!"))));
 }

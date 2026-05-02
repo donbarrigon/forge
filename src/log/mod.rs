@@ -1,1 +1,10 @@
 pub mod log;
+pub use log::alert;
+pub use log::critical;
+pub use log::debug;
+pub use log::emergency;
+pub use log::error;
+pub use log::info;
+pub use log::init;
+pub use log::notice;
+pub use log::warning;

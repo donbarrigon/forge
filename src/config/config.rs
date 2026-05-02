@@ -6,6 +6,7 @@ pub struct Env {
     pub app: AppEnv,
     pub db: DbEnv,
     pub server: Vec<ServerEnv>,
+    pub log: LogEnv,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,6 +20,13 @@ pub struct AppEnv {
 pub struct DbEnv {
     pub name: String,
     pub string_connection: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LogEnv {
+    pub print: bool,
+    pub level: String,
+    pub days: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
