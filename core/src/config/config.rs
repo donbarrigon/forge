@@ -52,3 +52,9 @@ pub fn load_env() -> Result<(), Box<dyn std::error::Error>> {
     ENV.set(config)
         .map_err(|_| "ENV has already been initialized — load_env() can only be called once".into())
 }
+
+pub fn init() -> Result<(), Box<dyn std::error::Error>> {
+    load_env()?;
+    crate::log::init();
+    return Ok(());
+}

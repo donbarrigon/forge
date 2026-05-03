@@ -1,8 +1,10 @@
 [package]
-name = "forge"
+name = "forge-framework"
 version = "0.1.0"
 edition = "2024"
-
+description = "A web framework for Rust"
+license = "Apache-2.0"
+repository = "https://github.com/donbarrigon/forge"
 
 [lib]
 name = "forge"

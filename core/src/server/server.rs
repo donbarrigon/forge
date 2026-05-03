@@ -14,17 +14,18 @@ use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tokio_rustls::TlsAcceptor;
 
-use crate::log;
+use crate::server::Router;
 
 pub struct Server {
     addr: SocketAddr,
     shutdown_sender: Option<oneshot::Sender<()>>,
     https: bool,
     auto_cert: bool,
+    router: Router,
 }
 
 impl Server {
-    pub fn new(host: &str, port: u16) -> Self {
+    pub fn new(host: &str, port: u16, router: Router) -> Self {
         let _ = rustls::crypto::ring::default_provider().install_default();
 
         let addr = format!("{}:{}", host, port).parse().expect("dirección inválida");
@@ -34,6 +35,7 @@ impl Server {
             shutdown_sender: None,
             https: false,
             auto_cert: false,
+            router,
         };
     }
 
@@ -62,6 +64,8 @@ impl Server {
         let (tx, mut rx) = oneshot::channel::<()>();
         self.shutdown_sender = Some(tx);
 
+        let handler = self.handler();
+
         if self.https {
             // ─── HTTPS — HTTP/2 con TLS ──────────────────────────────────────
             println!("forge corriendo en https://{}", self.addr);
@@ -78,6 +82,7 @@ impl Server {
                     result = listener.accept() => {
                         let (stream, _) = result?;
                         let acceptor    = tls_acceptor.clone();
+                        let handler     = handler.clone();
 
                         tokio::spawn(async move {
                             let tls_stream = match acceptor.accept(stream).await {
@@ -92,7 +97,7 @@ impl Server {
 
                             // serve_connection_with_upgrades mantiene la conexión abierta
                             if let Err(e) = auto::Builder::new(TokioExecutor::new())
-                                .serve_connection_with_upgrades(io, service_fn(hello))
+                                .serve_connection_with_upgrades(io, service_fn(handler))
                                 .await
                             {
                                 eprintln!("error en conexión HTTPS: {:?}", e);
@@ -120,12 +125,13 @@ impl Server {
                     result = listener.accept() => {
                         let (stream, _) = result?;
                         let io          = TokioIo::new(stream);
+                        let handler     = handler.clone();
 
                         tokio::spawn(async move {
                             // keep_alive(true) mantiene la conexión abierta en HTTP/1.1
                             if let Err(e) = http1::Builder::new()
                                 .keep_alive(true)
-                                .serve_connection(io, service_fn(hello))
+                                .serve_connection(io, service_fn(handler))
                                 .await
                             {
                                 eprintln!("error en conexión HTTP: {:?}", e);
@@ -152,6 +158,23 @@ impl Server {
     pub fn shutdown(&mut self) {
         if let Some(tx) = self.shutdown_sender.take() {
             let _ = tx.send(());
+        }
+    }
+
+    fn handler(
+        &self,
+    ) -> impl Fn(
+        Request<hyper::body::Incoming>,
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<Response<Full<Bytes>>, Infallible>> + Send>,
+    > + Clone
+    + Send
+    + 'static {
+        let router = Arc::new(self.router.clone());
+
+        move |req| {
+            let router = Arc::clone(&router);
+            Box::pin(async move { router.handle(req).await })
         }
     }
 }
@@ -195,14 +218,13 @@ fn get_tls_acceptor() -> Result<TlsAcceptor, Box<dyn std::error::Error>> {
 }
 
 pub async fn server_start() -> Result<(), Box<dyn std::error::Error>> {
-    crate::config::load_env()?;
-    crate::log::init();
+    crate::config::init()?;
 
     let config = crate::config::env();
     let mut handles = vec![];
 
     for server_env in &config.server {
-        let mut server = Server::new(&server_env.host, server_env.port);
+        let mut server = Server::new(&server_env.host, server_env.port, Router::new());
 
         if server_env.https {
             server.enable_https();
@@ -228,17 +250,4 @@ pub async fn server_start() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     return Ok(());
-}
-
-async fn hello(_req: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
-    log::emergency("esto es una emergencia", None);
-    log::alert("esto es una alerta", None);
-    log::critical("esto es critico", None);
-    log::error("esto es un error", None);
-    log::warning("esto es una advertencia", None);
-    log::notice("esto es una noticia", None);
-    log::info("esto es info", None);
-    log::debug("esto es un debug", None);
-    println!("Hello, from Forge!");
-    return Ok(Response::new(Full::new(Bytes::from("Hello, from Forge!"))));
 }
