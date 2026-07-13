@@ -86,7 +86,7 @@ func (self *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		if rec := recover(); rec != nil {
-			c.ResposeError(err.Panic(rec, string(debug.Stack())))
+			c.ResponseError(err.Panic(rec, string(debug.Stack())))
 		}
 	}()
 
@@ -101,7 +101,7 @@ func (self *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for _, middleware := range route.Middlewares {
 		if e := middleware(c); e != nil {
-			c.ResposeError(e)
+			c.ResponseError(e)
 			return
 		}
 	}
