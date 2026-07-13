@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func HexID(e any) *HttpError {
+func HexID(e error) *HttpError {
 	return New(BAD_REQUEST, "The identifier isn't valid", e)
 }
 
@@ -187,17 +187,17 @@ func handleServerError(se mongo.ServerError) *HttpError {
 
 func MongoUpdateResult(result *mongo.UpdateResult) *HttpError {
 	if result.MatchedCount == 0 {
-		return New(NOT_FOUND, "The document to update doesn't exist", "!result.MatchedCount == 0")
+		return New(NOT_FOUND, "The document to update doesn't exist", errors.New("!result.MatchedCount == 0"))
 	}
 	if result.ModifiedCount == 0 {
-		return New(CONFLICT, "No changes were applied when saving the document", "!result.ModifiedCount == 0")
+		return New(CONFLICT, "No changes were applied when saving the document", errors.New("!result.ModifiedCount == 0"))
 	}
 	return nil
 }
 
 func MongoDeleteResult(result *mongo.DeleteResult) *HttpError {
 	if result.DeletedCount == 0 {
-		return New(CONFLICT, "The document wasn't deleted", "!result.DeletedCount == 0")
+		return New(CONFLICT, "The document wasn't deleted", errors.New("!result.DeletedCount == 0"))
 	}
 	return nil
 }

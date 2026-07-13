@@ -64,7 +64,7 @@ func (self *ValidationError) HttpError() *HttpError {
 			Status:  UNPROCESSABLE_ENTITY,
 			Message: UNPROCESSABLE_ENTITY_MSG,
 			Name:    "Validation Error",
-			Cause:   nil,
+			Cause:   "",
 			Stack:   "",
 			Data:    data,
 		}
@@ -86,7 +86,7 @@ func (self *ValidationError) HttpErrorT(locale string) *HttpError {
 			Status:  UNPROCESSABLE_ENTITY,
 			Message: lang.T(locale, UNPROCESSABLE_ENTITY_MSG, nil),
 			Name:    "Validation Error",
-			Cause:   nil,
+			Cause:   "",
 			Stack:   "",
 			Data:    data,
 		}
