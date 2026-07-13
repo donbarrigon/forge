@@ -1,4 +1,4 @@
-package err
+package errs
 
 import (
 	"encoding/json"
@@ -50,7 +50,7 @@ func (self *ValidationError) Error() string {
 	return string(b)
 }
 
-func (self *ValidationError) HttpError() *HttpError {
+func (self *ValidationError) Errors() *Error {
 	data := map[string][]string{}
 	if len(self.Messages) > 0 {
 		for key, messages := range self.Messages {
@@ -60,7 +60,7 @@ func (self *ValidationError) HttpError() *HttpError {
 			}
 			data[key] = m
 		}
-		return &HttpError{
+		return &Error{
 			Status:  UNPROCESSABLE_ENTITY,
 			Message: UNPROCESSABLE_ENTITY_MSG,
 			Name:    "Validation Error",
@@ -72,7 +72,7 @@ func (self *ValidationError) HttpError() *HttpError {
 	return nil
 }
 
-func (self *ValidationError) HttpErrorT(locale string) *HttpError {
+func (self *ValidationError) ErrorsT(locale string) *Error {
 	data := map[string][]string{}
 	if len(self.Messages) > 0 {
 		for key, messages := range self.Messages {
@@ -82,7 +82,7 @@ func (self *ValidationError) HttpErrorT(locale string) *HttpError {
 			}
 			data[key] = m
 		}
-		return &HttpError{
+		return &Error{
 			Status:  UNPROCESSABLE_ENTITY,
 			Message: lang.T(locale, UNPROCESSABLE_ENTITY_MSG, nil),
 			Name:    "Validation Error",

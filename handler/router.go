@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/donbarrigon/forge/err"
+	"github.com/donbarrigon/forge/errs"
 )
 
 type ContolerFunc func(ctx *Context)
-type MiddlewareFunc func(ctx *Context) *err.HttpError
+type MiddlewareFunc func(ctx *Context) *errs.Error
 
 type Param struct {
 	Key   string
@@ -86,7 +86,7 @@ func (self *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		if rec := recover(); rec != nil {
-			c.ResponseError(err.Panic(rec, string(debug.Stack())))
+			c.ResponseError(errs.Panic(rec, string(debug.Stack())))
 		}
 	}()
 

@@ -1,4 +1,4 @@
-package err
+package errs
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func HexID(e error) *HttpError {
+func HexID(e error) *Error {
 	return New(BAD_REQUEST, "The identifier isn't valid", e)
 }
 
 // Convierte los errores del driver de mongo a errores HTTP
-func Mongo(e error) *HttpError {
+func Mongo(e error) *Error {
 	if e == nil {
 		return nil
 	}
@@ -93,7 +93,7 @@ func Mongo(e error) *HttpError {
 }
 
 // handleWriteException processes MongoDB write exceptions
-func handleWriteException(we mongo.WriteException) *HttpError {
+func handleWriteException(we mongo.WriteException) *Error {
 	for _, writeError := range we.WriteErrors {
 		switch writeError.Code {
 		case 11000, 11001: // Duplicate key errors
@@ -127,7 +127,7 @@ func handleWriteException(we mongo.WriteException) *HttpError {
 }
 
 // handleBulkWriteException processes bulk write exceptions
-func handleBulkWriteException(bwe mongo.BulkWriteException) *HttpError {
+func handleBulkWriteException(bwe mongo.BulkWriteException) *Error {
 	// Check for duplicate key errors in bulk operations
 	for _, writeError := range bwe.WriteErrors {
 		if writeError.Code == 11000 || writeError.Code == 11001 {
@@ -144,7 +144,7 @@ func handleBulkWriteException(bwe mongo.BulkWriteException) *HttpError {
 }
 
 // handleCommandError processes MongoDB command errors
-func handleCommandError(ce mongo.CommandError) *HttpError {
+func handleCommandError(ce mongo.CommandError) *Error {
 	switch ce.Code {
 	case 2: // BadValue
 		return New(BAD_REQUEST, "One of the parameters isn't valid", ce)
@@ -180,12 +180,12 @@ func handleCommandError(ce mongo.CommandError) *HttpError {
 }
 
 // handleServerError processes general MongoDB server errors
-func handleServerError(se mongo.ServerError) *HttpError {
+func handleServerError(se mongo.ServerError) *Error {
 	// Server errors are typically infrastructure issues
 	return New(SERVICE_UNAVAILABLE, "There's a problem with the database server", se)
 }
 
-func MongoUpdateResult(result *mongo.UpdateResult) *HttpError {
+func MongoUpdateResult(result *mongo.UpdateResult) *Error {
 	if result.MatchedCount == 0 {
 		return New(NOT_FOUND, "The document to update doesn't exist", errors.New("!result.MatchedCount == 0"))
 	}
@@ -195,7 +195,7 @@ func MongoUpdateResult(result *mongo.UpdateResult) *HttpError {
 	return nil
 }
 
-func MongoDeleteResult(result *mongo.DeleteResult) *HttpError {
+func MongoDeleteResult(result *mongo.DeleteResult) *Error {
 	if result.DeletedCount == 0 {
 		return New(CONFLICT, "The document wasn't deleted", errors.New("!result.DeletedCount == 0"))
 	}

@@ -1,4 +1,4 @@
-package err
+package errs
 
 // Códigos de error HTTP 4xx y 5xx
 const (

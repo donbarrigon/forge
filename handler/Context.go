@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/donbarrigon/forge/err"
+	"github.com/donbarrigon/forge/errs"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
@@ -84,10 +84,10 @@ func (self *Context) ResponseCreatedJson(a any) {
 	self.ResponseJson(http.StatusCreated, a)
 }
 
-func (self *Context) ResponseError(e *err.HttpError) {
+func (self *Context) ResponseError(e *errs.Error) {
 	self.Response(e.Status, e)
 }
 
-func (self *Context) ResponseErrorJson(e *err.HttpError) {
+func (self *Context) ResponseErrorJson(e *errs.Error) {
 	self.ResponseJson(e.Status, e)
 }
